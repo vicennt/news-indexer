@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#! -*- encoding: utf8 -*-
+#!encoding:utf-8
 
 import sys, os, re
 import pickle
@@ -61,9 +61,12 @@ if __name__ == "__main__":
     if len(sys.argv) < 3 or len(sys.argv) > 3:
     	print("Usage: python sar_indexer.py <dir_news> <index_file>")
     else: 
-    	#TODO: Check if the file and the directory exists
     	dir_news = sys.argv[1]
     	index_file = sys.argv[2]
+    	if not os.path.exists(dir_news):
+    		print("Error: The directory " + dir_news + " doesn't exist")
+    		sys.exit(1)
+
     	documents_processing(dir_news, index_file)
 
         
