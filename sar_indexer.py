@@ -25,7 +25,6 @@ def documents_processing(directory, index_file):
 		relative_new_position = 0
 		for n in news:
 			dictionary_news[newID] = (docID , relative_new_position) # Add entry 
-			relative_new_position += 1 
 			new = n[n.index('<TEXT>') + 6 : n.index('</TEXT>')].lower()
 			new = clean_re.sub(' ', new) # Clean text
 			terms = re.split('\s|\n|\t', new) # Tokenize
@@ -42,6 +41,7 @@ def documents_processing(directory, index_file):
 			newID += 1
 			relative_new_position += 1
 		docID += 1
+
 
 
 
