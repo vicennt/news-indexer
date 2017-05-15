@@ -27,26 +27,21 @@ def documents_processing(directory, index_file):
 			dictionary_news[newID] = (docID , relative_new_position) # Add entry 
 			new = n[n.index('<TEXT>') + 6 : n.index('</TEXT>')].lower()
 			new = clean_re.sub(' ', new) # Clean text
-			terms = re.split('\s|\n|\t', new) # Tokenize
+			terms = new.split() # Tokenize
 			relative_term_position = 0
 			for t in terms:
 				if(t in dictionary_terms):
-					if(newID in dictionary_terms[t]):
-						dictionary_terms[t][newID].append(relative_term_position)
+					if(newID == dictionary_terms[t][-1][0]): # Ultima posicio de la llista de tuple (ultima tupla)
+						dictionary_terms[t][-1][1].append(relative_term_position)
 					else:
-						dictionary_terms[t][newID] = [relative_term_position]
+						dictionary_terms[t].append((newID, [relative_term_position])) 
 				else:
-					dictionary_terms[t] = {newID : [relative_term_position]}
+					dictionary_terms[t] = [(newID ,[relative_term_position])]
 				relative_term_position += 1
 			newID += 1
 			relative_new_position += 1
 		docID += 1
 
-
-
-
-
-	del dictionary_terms[""] # TODO: Resolve this problem
 	
 	# ---- Printing stats -----
 	print(len(dictionary_docs))
