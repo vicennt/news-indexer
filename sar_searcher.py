@@ -25,12 +25,12 @@ def process_query(query):
 		all_new_keys = []
 		for tupla in dictionary_terms.items():
 			all_new_keys.append(list(tupla[1].keys()))
+
 	# If the query is a term
 	if(len(terms) == 1):
 		keys_news = [item[0] for item in dictionary_terms[query]]
 		
 	# If the query has an implicit and
-
 	if(len(terms) > 1 and len(operators) == 0): 
 		list1 = [item[0] for item in dictionary_terms[terms[0]]]
 		list2 = [item[0] for item in dictionary_terms[terms[1]]]
@@ -72,6 +72,8 @@ def show_data(keys_news, terms):
 
 	ten_first = 0
 	for i in keys_news:
+		print("###################################")
+		print("\n")
 		tupla = dictionary_news[i]
 		path_doc = dictionary_docs[tupla[0]]
 		position_new =  tupla[1]
@@ -88,28 +90,51 @@ def show_data(keys_news, terms):
 		if len(keys_news) <= 2:
 			print(title + "\n")
 			print(text)
+
 		elif len(keys_news) <= 5:
 			print(title + "\n")
-			snippet_new(title, text, terms)
+			snippet_new(text, terms)
 		elif len(keys_news) > 5:
 			print(title + "\n")
 			ten_first += 1
 			if(ten_first == 10):
 				break
+		print("\n")
+		print("[File: " + str(path_doc) + "]")
+		print("\n")
+	print("------Stats-----")
+	print("Total number of news retrieved: " + str(len(keys_news)) + "")
+	print("\n")
+
 
 
 
 
 # TODO: Snippet
-def snippet_new(title, text, terms):
-	for i in terms:
-		snippet = "..." + text[text.index(terms[0]) - 30 : text.index(terms[0]) + 30] + "..."
-		terms.pop(0)
-		if(len(terms) > 0 and terms[0].find(terms[0]) != -1):
-			print(snippet)
-			terms.pop(0)
+def snippet_new(text, terms):
+	list_text = text.split()
+	list_indexs = []
+	list_word_query_processed = []
+	num_ocurrences_show = 2
+	num_elements_show = 4
+
+	for i, v in enumerate(list_text):
+		if(v in terms and list_word_query_processed.count(v) < num_ocurrences_show):
+			list_indexs.append(i)
+			list_word_query_processed.append(v)
+
+	
+	for i in list_indexs:
+		if(i - num_elements_show <= 0):
+			snippet = "..." + " ".join(list_text[:i + num_elements_show]) + "..."
+		elif(i + num_elements_show >= len(list_text)):
+			snippet = "..." + " ".join(list_text[i - num_elements_show:]) + "..."
 		else:
-			print(snippet)
+			snippet = "..." + " ".join(list_text[i - num_elements_show:i + num_elements_show]) + "..."
+		print(snippet)
+
+
+		
 
 
 			
