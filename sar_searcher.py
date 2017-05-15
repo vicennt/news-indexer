@@ -19,34 +19,29 @@ def process_query(query):
 	terms, operators, negation = parser(query)
 	keys_news = [] 
 
+	backup_terms = list(terms)
+
 	if(negation):
 		all_new_keys = []
 		for tupla in dictionary_terms.items():
 			all_new_keys.append(list(tupla[1].keys()))
-		print(all_new_keys)
-
 	# If the query is a term
 	if(len(terms) == 1):
-		dict_res_query = dictionary_terms[query]
-		keys_news = list(dict_res_query.keys())
+		keys_news = [item[0] for item in dictionary_terms[query]]
 		
 	# If the query has an implicit and
+
 	if(len(terms) > 1 and len(operators) == 0): 
-		list1 = list(dictionary_terms[terms[0]].keys())
-		print("Keys 1:")
-		print(list1)
-		list2 = list(dictionary_terms[terms[1]].keys())
-		print("Keys 2:")
-		print(list2)
+		list1 = [item[0] for item in dictionary_terms[terms[0]]]
+		list2 = [item[0] for item in dictionary_terms[terms[1]]]
 		keys_news = intersection(list1, list2)
 		del terms[0:2]
 		while(len(terms) > 0):
-			aux = list(dictionary_terms[terms[0]].keys())
+			aux = [item[0] for item in dictionary_terms[terms[0]]]
 			keys_news = intersection(keys_news, aux)
 			terms.pop(0)
 	else:
-		list1 = list(dictionary_terms[terms[0]].keys())
-		list2 = list(dictionary_terms[terms[1]].keys())
+		print("TODO")
 
 		'''
 		if(operators[0] == "and"):
@@ -54,7 +49,7 @@ def process_query(query):
 		elif(operators[0] == "or"):
 			keys_news = union(list1, list2)
 		elif(operators[0] == "not")
-		'''
+		
 		
 		operators.pop(0)
 		del terms[0:2]
@@ -63,9 +58,9 @@ def process_query(query):
 			aux = list(dictionary_terms[terms[0]].keys())
 			keys_news = intersection(keys_news, aux)
 			terms.pop(0)
-
-
-	show_data(keys_news, terms)
+		'''
+	print(backup_terms)
+	show_data(keys_news, backup_terms)
 
 	# If the query has operators
 	#TODO
@@ -74,10 +69,6 @@ def process_query(query):
 
 def show_data(keys_news, terms):
 	num_news = len(keys_news)
-
-	# Stadistics
-	print(num_news)
-	print(keys_news)
 
 	ten_first = 0
 	for i in keys_news:
@@ -98,6 +89,7 @@ def show_data(keys_news, terms):
 			print(title + "\n")
 			print(text)
 		elif len(keys_news) <= 5:
+			print(title + "\n")
 			snippet_new(title, text, terms)
 		elif len(keys_news) > 5:
 			print(title + "\n")
@@ -110,7 +102,16 @@ def show_data(keys_news, terms):
 
 # TODO: Snippet
 def snippet_new(title, text, terms):
-	print("TODO")
+	for i in terms:
+		snippet = "..." + text[text.index(terms[0]) - 30 : text.index(terms[0]) + 30] + "..."
+		terms.pop(0)
+		if(len(terms) > 0 and terms[0].find(terms[0]) != -1):
+			print(snippet)
+			terms.pop(0)
+		else:
+			print(snippet)
+
+
 			
 
 def parser(query):
