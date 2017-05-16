@@ -56,6 +56,7 @@ def process_query(query):
 	# Si soles tenim un terme en la query
 	if(len(terms) == 1 and len(operators) == 0): # Only a term 
 		keys_news = [item[0] for item in dictionary_terms[query]]
+		terms.pop(0)
 
 	if(negation): # not valencia
 		print("entra segon if")
@@ -99,10 +100,10 @@ def process_query(query):
 				keys_news = union(aux, keys_news)
 			elif(operators[0] == "andnot" or operators[0] == "not"):
 				res_not = process_not(aux)
-				keys_news = intersection(x, res_not)
+				keys_news = intersection(keys_news, res_not)
 			elif(operators[0] == "ornot"):
-				res_not = process_not(keys_news)
-				keys_news = union(res_not, aux)
+				res_not = process_not(aux)
+				keys_news = union(keys_news, res_not)
 
 			terms.pop(0)
 			operators.pop(0)
@@ -194,7 +195,7 @@ def union(list1, list2):
 			res.append(list1[i])
 			i+=1
 			j+=1
-		if(list1[i] <= list2[j]):
+		elif(list1[i] < list2[j]):
 			res.append(list1[i])
 			i+=1
 		else:
@@ -210,9 +211,7 @@ def union(list1, list2):
 	return res
 
 
-def intersection(list1, list2):
-	l1 = sorted(list1)
-	l2 = sorted(list2)
+def intersection(l1, l2):
 	res = []
 	i = 0
 	j = 0
