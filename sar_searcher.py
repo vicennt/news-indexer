@@ -8,11 +8,15 @@ clean_re = re.compile('\W+')
 dictionary_terms = {}
 dictionary_docs = {}
 dictionary_news = {}
+dictionary_headline = {}
+dictionary_date = {}
+dictionary_categories = {}
+
 
 
 def load_data(file):
 	global dictionary_terms, dictionary_docs, dictionary_news
-	dictionary_terms, dictionary_docs, dictionary_news = pickle.load(open(index_file,'rb'))
+	dictionary_terms, dictionary_docs, dictionary_news, dictionary_headline, dictionary_date, dictionary_categories = pickle.load(open(index_file,'rb'))
 		
 
 def parser(query):
@@ -59,7 +63,6 @@ def process_query(query):
 		terms.pop(0)
 
 	if(negation): # not valencia
-		print("entra segon if")
 		list1 = [item[0] for item in dictionary_terms[terms[0]]]
 		keys_news = process_not(list1)
 		list1 = list(keys_news)
@@ -67,7 +70,6 @@ def process_query(query):
 		terms.pop(0)
 
 	if(len(terms) > 0):
-		print("entra tercer if")
 		if(not(negation)):
 			list1 = [item[0] for item in dictionary_terms[terms[0]]]
 			list2 = [item[0] for item in dictionary_terms[terms[1]]]
