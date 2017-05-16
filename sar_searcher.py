@@ -13,57 +13,108 @@ dictionary_news = {}
 def load_data(file):
 	global dictionary_terms, dictionary_docs, dictionary_news
 	dictionary_terms, dictionary_docs, dictionary_news = pickle.load(open(index_file,'rb'))
+		
+
+def parser(query):
+	logic_operators = ["and", "not", "or"]
+	lista = query.split(" ")
+	terms = []
+	operators = []
+	first_negation = lista[0] == "not"
+
+	i = 0
+	while(i < len(lista) -1):
+		if(lista[i] not in logic_operators and lista[i+1] not in logic_operators):
+			terms.append(lista[i])
+			operators.append("and")
+			i+=1
+		elif(lista[i] in logic_operators and lista[i+1] in logic_operators):
+			operators.append(lista[i] + lista[i+1])
+			i+=2
+		else:
+			if(lista[i] in logic_operators):
+				operators.append(lista[i])
+			else:
+				terms.append(lista[i])
+			i += 1
+	terms.append(lista[-1])
+	return terms, operators, first_negation
 
 
 def process_query(query):
+
+	# Aci tenim el termes en una llista els operadors en altra i si la query comença amb NOT
 	terms, operators, negation = parser(query)
 	keys_news = [] 
-
+	print(terms)
+	print(operators)
 	backup_terms = list(terms)
+	list1 = []
+	list2 = []
+	finalize = False
 
-	if(negation):
-		all_new_keys = []
-		for tupla in dictionary_terms.items():
-			all_new_keys.append(list(tupla[1].keys()))
-
-	# If the query is a term
-	if(len(terms) == 1):
+	# Si soles tenim un terme en la query
+	if(len(terms) == 1 and len(operators) == 0): # Only a term 
 		keys_news = [item[0] for item in dictionary_terms[query]]
-		
-	# If the query has an implicit and
-	if(len(terms) > 1 and len(operators) == 0): 
-		list1 = [item[0] for item in dictionary_terms[terms[0]]]
-		list2 = [item[0] for item in dictionary_terms[terms[1]]]
-		keys_news = intersection(list1, list2)
-		del terms[0:2]
-		while(len(terms) > 0):
-			aux = [item[0] for item in dictionary_terms[terms[0]]]
-			keys_news = intersection(keys_news, aux)
-			terms.pop(0)
-	else:
-		print("TODO")
 
-		'''
+	if(negation): # not valencia
+		print("entra segon if")
+		list1 = [item[0] for item in dictionary_terms[terms[0]]]
+		keys_news = process_not(list1)
+		list1 = list(keys_news)
+		operators.pop(0)
+		terms.pop(0)
+
+	if(len(terms) > 0):
+		print("entra tercer if")
+		if(not(negation)):
+			list1 = [item[0] for item in dictionary_terms[terms[0]]]
+			list2 = [item[0] for item in dictionary_terms[terms[1]]]
+		else:
+			list2 = [item[0] for item in dictionary_terms[terms[0]]]
+
+		# mirem quin es el operador que els separa i ejecutem el algoritme adequat
 		if(operators[0] == "and"):
-			keys_news = intersection(list1, list2)
+			keys_news = intersection(list1,list2)
 		elif(operators[0] == "or"):
-			keys_news = union(list1, list2)
-		elif(operators[0] == "not")
-		
-		
+			keys_news = union(list1, list2)	
+		elif(operators[0] == "andnot" or operators[0] == "not"):
+			res_not = process_not(list2)
+			keys_news = intersection(list1, res_not)
+		elif(operators[0] == "ornot"):
+			res_not = process_not(list2)
+			keys_news = union(all_new_keys, res_not)
+
+
+		# elimine els termes y el operador de les llistes
 		operators.pop(0)
 		del terms[0:2]
 
-		while(len(terms) > 0):
-			aux = list(dictionary_terms[terms[0]].keys())
-			keys_news = intersection(keys_news, aux)
+		# Si tenim mes elements que procesar seguim
+		while(len(terms) > 0 and len(operators) > 0):
+			aux = [item[0] for item in dictionary_terms[terms[0]]]
+			if(operators[0] == "and"):
+				keys_news = intersection(aux, keys_news)
+			elif(operators[0] == "or"):
+				keys_news = union(aux, keys_news)
+			elif(operators[0] == "andnot" or operators[0] == "not"):
+				res_not = process_not(aux)
+				keys_news = intersection(x, res_not)
+			elif(operators[0] == "ornot"):
+				res_not = process_not(keys_news)
+				keys_news = union(res_not, aux)
+
 			terms.pop(0)
-		'''
-	print(backup_terms)
+			operators.pop(0)
+
 	show_data(keys_news, backup_terms)
 
-	# If the query has operators
-	#TODO
+def process_not(list_terms):
+	# Elimine en les keys de tota la noticia
+	all_new_keys = list(dictionary_news.keys())
+	res = [i for j, i in enumerate(all_new_keys) if j not in list_terms]
+	return res
+
 
 
 
@@ -110,7 +161,7 @@ def show_data(keys_news, terms):
 
 
 
-# TODO: Snippet
+# TODO: Millorar snnipet per a no repetir frases
 def snippet_new(text, terms):
 	list_text = text.split()
 	list_indexs = []
@@ -119,49 +170,20 @@ def snippet_new(text, terms):
 	num_elements_show = 4
 
 	for i, v in enumerate(list_text):
-		if(v in terms and list_word_query_processed.count(v) < num_ocurrences_show):
+		if(v in terms and list_word_query_processed.count(v) <= num_ocurrences_show):
 			list_indexs.append(i)
 			list_word_query_processed.append(v)
 
 	
 	for i in list_indexs:
-		if(i - num_elements_show <= 0):
+		if(i - num_elements_show <= 0): # Esta al inici
 			snippet = "..." + " ".join(list_text[:i + num_elements_show]) + "..."
 		elif(i + num_elements_show >= len(list_text)):
-			snippet = "..." + " ".join(list_text[i - num_elements_show:]) + "..."
+			snippet = "..." + " ".join(list_text[i - num_elements_show:]) + "..." # Esta al final
 		else:
-			snippet = "..." + " ".join(list_text[i - num_elements_show:i + num_elements_show]) + "..."
+			snippet = "..." + " ".join(list_text[i - num_elements_show:i + num_elements_show]) + "..." # Esta pel mig
 		print(snippet)
 
-
-		
-
-
-			
-
-def parser(query):
-	operators = [ "not","or", "and"]
-	logical_operators = []
-	terms_query = []
-	negation = False
-
-	query = query.lower()
-	terms = query.split(" ")
-	num_elements_query = len(terms)
-	if(terms[0] == operators[0]):
-		logical_operators.append(terms[0])
-		terms.pop(0)
-		num_elements_query -= 1 
-		negation = True
-
-	i = 0
-	while(i < num_elements_query):
-		if(query[0] in operators):
-			logical_operators.append(terms[i])
-		else:
-			terms_query.append(terms[i])
-		i += 1
-	return terms_query, logical_operators, negation
 
 def union(list1, list2):
 	i = 0
