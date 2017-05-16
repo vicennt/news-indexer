@@ -13,7 +13,7 @@ dictionary_date = {}
 dictionary_categories = {}
 
 
-
+# carregar diccionaris
 def load_data(file):
 	global dictionary_terms, dictionary_docs, dictionary_news, dictionary_headline, dictionary_date, dictionary_categories
 	dictionary_terms, dictionary_docs, dictionary_news, dictionary_headline, dictionary_date, dictionary_categories = pickle.load(open(index_file,'rb'))
@@ -32,15 +32,16 @@ def parser(query):
 	first_negation = lista[0] == "not"
 
 
+
 	i = 0
 	while(i < len(lista) -1):
 		if(lista[i] not in logic_operators and lista[i+1] not in logic_operators): # and implicit
 			operators.append("and")
 			split_term = lista[i].split(":")
-			if(len(split_term) > 1):
+			if(len(split_term) > 1): # te filtro
 				list_types.append(types.index(split_term[0]))
 				terms.append(split_term[1])
-			else:
+			else: # es un terme normal
 				terms.append(lista[i])
 				list_types.append(3)
 			i+=1
@@ -62,7 +63,8 @@ def parser(query):
 
 
 			i += 1
-		
+	
+	# el ultim de la consulta
 	split_term = lista[-1].split(":")
 	if(len(split_term) > 1):
 		list_types.append(types.index(split_term[0]))
@@ -82,18 +84,12 @@ def process_query(query):
 	# Aci tenim el termes en una llista els operadors en altra i si la query comença amb NOT
 	terms, operators, negation, types = parser(query)
 	keys_news = [] 
-
 	backup_terms = list(terms)
-
 	list1 = []
 	list2 = []
 
-	print(terms)
-	print(operators)
-	print(types)
-
 	# Si soles tenim un terme en la query
-	if(len(terms) == 1 and len(operators) == 0): # Only a term 
+	if(len(terms) == 1 and len(operators) == 0):  
 		if(types[0] < 2):
 			keys_news = dicts[types[0]][terms[0]]
 		else:
@@ -102,6 +98,7 @@ def process_query(query):
 		types.pop(0)
 
 
+	# negation true si el inici de la consulta es un not
 	if(negation): # not valencia
 		if(types[0] < 2):
 			list1 = dicts[types[0]][terms[0]]
@@ -115,7 +112,7 @@ def process_query(query):
 
 
 	if(len(terms) > 0):
-		if(not(negation)):
+		if(not(negation)): # query normal sense negar tot
 			if(types[0] < 2 and types[1] < 2):
 				list1 = dicts[types[0]][terms[0]]
 				list2 = dicts[types[1]][terms[1]]
@@ -128,7 +125,7 @@ def process_query(query):
 			elif(types[0] >= 2 and types[1] >= 2):
 				list1 = [item[0] for item in dicts[types[0]][terms[0]]]
 				list2 = [item[0] for item in dicts[types[1]][terms[1]]]
-		else:
+		else: # la list 1 ja s'ha carregat dalt
 			if(types[0] < 2):
 				list2 = dicts[types[1]][terms[1]]
 			else:
@@ -155,10 +152,8 @@ def process_query(query):
 		del types[0:2]
 
 
-		# Si tenim mes elements que procesar seguim
+		# Si apleguem aci es que la consulta te mes de 2 termes, per tant procesem els restants
 		while(len(terms) > 0 and len(operators) > 0):
-			print(types[0])
-			print(terms[0])
 			if(types[0] < 2):
 				aux = dicts[types[0]][terms[0]]
 			elif(types[0] >= 2):
@@ -189,7 +184,7 @@ def process_not(list_terms):
 
 
 
-
+# Funcio per a mostrar la info per pantalla
 def show_data(keys_news, terms):
 	num_news = len(keys_news)
 
@@ -233,15 +228,14 @@ def show_data(keys_news, terms):
 
 
 
-# TODO: Millorar snnipet per a no repetir frases
+
 def snippet_new(text, terms):
 	list_text = text.split()
-	list_indexs = []
-	list_word_query_processed = []
+	list_indexs = [] # index de aon es troba el terme
+	list_word_query_processed = [] # llista per a controlar que tenim tots els termes
 	num_elements_show = 4
 
-	print("esta valencia: "+ str("valencia" in list_text))
-
+	# trobar els termes de la consulta en el text i guardar el index de aon estan
 	for i, v in enumerate(list_text):
 		if(v in terms and v not in list_word_query_processed):
 			list_indexs.append(i)
@@ -249,6 +243,7 @@ def snippet_new(text, terms):
 
 	print(list_word_query_processed)
 
+	# mostrem un contexte al rededor del index que hem guardat
 	for i in list_indexs:
 		if(i - num_elements_show <= 0): # Esta al inici
 			snippet = "..." + " ".join(list_text[:i + num_elements_show]) + "..."
@@ -259,6 +254,7 @@ def snippet_new(text, terms):
 		print(snippet)
 
 
+# algoritme unio de les transparencies
 def union(list1, list2):
 	i = 0
 	j = 0
@@ -283,7 +279,7 @@ def union(list1, list2):
 
 	return res
 
-
+# algoritme interseccio de les transparencies
 def intersection(l1, l2):
 	res = []
 	i = 0

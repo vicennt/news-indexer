@@ -18,6 +18,8 @@ def documents_processing(directory, index_file):
 	docID = 0
 	newID = 0
 	list_files_dir = os.listdir(directory)
+
+	# cada document
 	for i in list_files_dir:
 		path = os.path.join(directory, i)
 		dictionary_docs[docID] = path
@@ -27,6 +29,7 @@ def documents_processing(directory, index_file):
 		news.pop(0) # Delete the first item, it is empty
 		relative_new_position = 0
 
+		# cada noticia dins del document
 		for n in news:
 			dictionary_news[newID] = (docID , relative_new_position) # Add entry
 			title = n[n.index('<TITLE>') + 7:n.index('</TITLE>')].lower() 
@@ -39,11 +42,13 @@ def documents_processing(directory, index_file):
 
 			category = category.split()
 
+			# diccionari dates
 			if(date in dictionary_date):
 				dictionary_date[date].append(newID)
 			else:
 				dictionary_date[date] = [newID]
 
+			# diccionary categories
 			for i in category:
 				if(i in dictionary_categories):
 					dictionary_categories[i].append(newID)
@@ -51,11 +56,12 @@ def documents_processing(directory, index_file):
 					dictionary_categories[i] = [newID]
 
 
+			# diccionary titul el proces es el mateix que el de el text
 			terms_headline = title.split() # Tokenize
 			relative_term_position = 0
 			for t in terms_headline:
 				if(t in dictionary_headline):
-					if(newID == dictionary_headline[t][-1][0]): # Ultima posicio de la llista de tuple (ultima tupla)
+					if(newID == dictionary_headline[t][-1][0]): # Mirar el id de la ultima tupla, si existeix afegim a la llista
 						dictionary_headline[t][-1][1].append(relative_term_position)
 					else:
 						dictionary_headline[t].append((newID, [relative_term_position])) 
@@ -67,10 +73,10 @@ def documents_processing(directory, index_file):
 			relative_term_position = 0
 			for t in terms:
 				if(t in dictionary_terms):
-					if(newID == dictionary_terms[t][-1][0]): # Ultima posicio de la llista de tuple (ultima tupla)
+					if(newID == dictionary_terms[t][-1][0]): # Mirar el id de la ultima tupla, si existeix afegim a la llista
 						dictionary_terms[t][-1][1].append(relative_term_position)
 					else:
-						dictionary_terms[t].append((newID, [relative_term_position])) 
+						dictionary_terms[t].append((newID, [relative_term_position])) # si no creem una tupla nova
 				else:
 					dictionary_terms[t] = [(newID ,[relative_term_position])]
 				relative_term_position += 1
