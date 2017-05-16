@@ -37,14 +37,15 @@ def documents_processing(directory, index_file):
 			date = clean_re.sub(' ', date)
 			new = clean_re.sub(' ', new) # Clean text
 
-			try:
+
+			if(date in dictionary_date):
 				dictionary_date[date].append(newID)
-			except:
+			else:
 				dictionary_date[date] = [newID]
 
-			try:
+			if(category in dictionary_categories):
 				dictionary_categories[category].append(newID)
-			except:
+			else:
 				dictionary_categories[category] = [newID]
 
 

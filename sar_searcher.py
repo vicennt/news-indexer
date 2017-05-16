@@ -15,66 +15,122 @@ dictionary_categories = {}
 
 
 def load_data(file):
-	global dictionary_terms, dictionary_docs, dictionary_news
+	global dictionary_terms, dictionary_docs, dictionary_news, dictionary_headline, dictionary_date, dictionary_categories
 	dictionary_terms, dictionary_docs, dictionary_news, dictionary_headline, dictionary_date, dictionary_categories = pickle.load(open(index_file,'rb'))
-		
 
 def parser(query):
 	logic_operators = ["and", "not", "or"]
-	lista = query.split(" ")
+	types = ["date", "category", "headline", "text"]
+	lista = query.lower().split(" ")
 	terms = []
 	operators = []
+	list_types = []
 	first_negation = lista[0] == "not"
+
 
 	i = 0
 	while(i < len(lista) -1):
-		if(lista[i] not in logic_operators and lista[i+1] not in logic_operators):
-			terms.append(lista[i])
+		if(lista[i] not in logic_operators and lista[i+1] not in logic_operators): # and implicit
 			operators.append("and")
+			split_term = lista[i].split(":")
+			if(len(split_term) > 1):
+				list_types.append(types.index(split_term[0]))
+				terms.append(split_term[1])
+			else:
+				terms.append(lista[i])
+				list_types.append(3)
 			i+=1
-		elif(lista[i] in logic_operators and lista[i+1] in logic_operators):
+
+		elif(lista[i] in logic_operators and lista[i+1] in logic_operators): # dos operadors seguits
 			operators.append(lista[i] + lista[i+1])
 			i+=2
-		else:
+		else: # si els separa un operador
 			if(lista[i] in logic_operators):
 				operators.append(lista[i])
 			else:
-				terms.append(lista[i])
+				split_term = lista[i].split(":")
+				if(len(split_term) > 1): # te filtro
+					list_types.append(types.index(split_term[0]))
+					terms.append(split_term[1])
+				else: # es un terme normal
+					terms.append(lista[i])
+					list_types.append(3)
+
+
 			i += 1
-	terms.append(lista[-1])
-	return terms, operators, first_negation
+		
+	split_term = lista[-1].split(":")
+	if(len(split_term) > 1):
+		list_types.append(types.index(split_term[0]))
+		terms.append(split_term[1])
+	else:
+		terms.append(lista[-1])
+		list_types.append(3)
+
+	return terms, operators, first_negation, list_types
 
 
 def process_query(query):
 
+	types = ["date", "category", "headline", "text"]
+	dicts = [dictionary_date, dictionary_categories, dictionary_headline, dictionary_terms]
+
 	# Aci tenim el termes en una llista els operadors en altra i si la query comença amb NOT
-	terms, operators, negation = parser(query)
+	terms, operators, negation, types = parser(query)
 	keys_news = [] 
-	print(terms)
-	print(operators)
+
 	backup_terms = list(terms)
+
 	list1 = []
 	list2 = []
-	finalize = False
+
+	print(terms)
+	print(operators)
+	print(types)
 
 	# Si soles tenim un terme en la query
 	if(len(terms) == 1 and len(operators) == 0): # Only a term 
-		keys_news = [item[0] for item in dictionary_terms[query]]
+		if(types[0] < 2):
+			keys_news = dicts[types[0]][terms[0]]
+		else:
+			keys_news = [item[0] for item in dicts[types[0]][terms[0]]]
 		terms.pop(0)
+		types.pop(0)
+
 
 	if(negation): # not valencia
-		list1 = [item[0] for item in dictionary_terms[terms[0]]]
+		if(types[0] < 2):
+			list1 = dicts[types[0]][terms[0]]
+		else:
+			list1 = [item[0] for item in dicts[types[0]][terms[0]]]
 		keys_news = process_not(list1)
 		list1 = list(keys_news)
 		operators.pop(0)
 		terms.pop(0)
+		types.pop(0)
+
 
 	if(len(terms) > 0):
 		if(not(negation)):
-			list1 = [item[0] for item in dictionary_terms[terms[0]]]
-			list2 = [item[0] for item in dictionary_terms[terms[1]]]
+			if(types[0] < 2 and types[1] < 2):
+				list1 = dicts[types[0]][terms[0]]
+				list2 = dicts[types[1]][terms[1]]
+			elif(types[0] < 2 and types[1] >= 2):
+				list1 = dicts[types[0]][terms[0]]
+				list2 = [item[0] for item in dicts[types[1]][terms[1]]]
+			elif(types[0] >= 2 and types[1] < 2):
+				list1 = [item[0] for item in dicts[types[0]][terms[0]]]
+				list2 = dicts[types[1]][terms[1]]
+			elif(types[0] >= 2 and types[1] >= 2):
+				list1 = [item[0] for item in dicts[types[0]][terms[0]]]
+				list2 = [item[0] for item in dicts[types[1]][terms[1]]]
 		else:
-			list2 = [item[0] for item in dictionary_terms[terms[0]]]
+			if(types[0] < 2):
+				list2 = dicts[types[1]][terms[1]]
+			else:
+				list2 = [item[0] for item in dicts[types[1]][terms[1]]]
+
+		
 
 		# mirem quin es el operador que els separa i ejecutem el algoritme adequat
 		if(operators[0] == "and"):
@@ -92,10 +148,18 @@ def process_query(query):
 		# elimine els termes y el operador de les llistes
 		operators.pop(0)
 		del terms[0:2]
+		del types[0:2]
+
 
 		# Si tenim mes elements que procesar seguim
 		while(len(terms) > 0 and len(operators) > 0):
-			aux = [item[0] for item in dictionary_terms[terms[0]]]
+			print(types[0])
+			print(terms[0])
+			if(types[0] < 2):
+				aux = dicts[types[0]][terms[0]]
+			else:
+				aux = [item[0] for item in dicts[types[0]][terms[0]]]
+
 			if(operators[0] == "and"):
 				keys_news = intersection(aux, keys_news)
 			elif(operators[0] == "or"):
@@ -109,6 +173,7 @@ def process_query(query):
 
 			terms.pop(0)
 			operators.pop(0)
+			types.pop(0)
 
 	show_data(keys_news, backup_terms)
 
