@@ -37,16 +37,18 @@ def documents_processing(directory, index_file):
 			date = clean_re.sub(' ', date)
 			new = clean_re.sub(' ', new) # Clean text
 
+			category = category.split()
 
 			if(date in dictionary_date):
 				dictionary_date[date].append(newID)
 			else:
 				dictionary_date[date] = [newID]
 
-			if(category in dictionary_categories):
-				dictionary_categories[category].append(newID)
-			else:
-				dictionary_categories[category] = [newID]
+			for i in category:
+				if(i in dictionary_categories):
+					dictionary_categories[i].append(newID)
+				else:
+					dictionary_categories[i] = [newID]
 
 
 			terms_headline = title.split() # Tokenize

@@ -19,12 +19,16 @@ def load_data(file):
 	dictionary_terms, dictionary_docs, dictionary_news, dictionary_headline, dictionary_date, dictionary_categories = pickle.load(open(index_file,'rb'))
 
 def parser(query):
+	# Llista amb els posibles operadors
 	logic_operators = ["and", "not", "or"]
+	# Llista amb els posibles filtros
 	types = ["date", "category", "headline", "text"]
+	# tokenizar la query
 	lista = query.lower().split(" ")
 	terms = []
 	operators = []
 	list_types = []
+
 	first_negation = lista[0] == "not"
 
 
@@ -157,7 +161,7 @@ def process_query(query):
 			print(terms[0])
 			if(types[0] < 2):
 				aux = dicts[types[0]][terms[0]]
-			else:
+			elif(types[0] >= 2):
 				aux = [item[0] for item in dicts[types[0]][terms[0]]]
 
 			if(operators[0] == "and"):
@@ -234,15 +238,17 @@ def snippet_new(text, terms):
 	list_text = text.split()
 	list_indexs = []
 	list_word_query_processed = []
-	num_ocurrences_show = 2
 	num_elements_show = 4
 
+	print("esta valencia: "+ str("valencia" in list_text))
+
 	for i, v in enumerate(list_text):
-		if(v in terms and list_word_query_processed.count(v) <= num_ocurrences_show):
+		if(v in terms and v not in list_word_query_processed):
 			list_indexs.append(i)
 			list_word_query_processed.append(v)
 
-	
+	print(list_word_query_processed)
+
 	for i in list_indexs:
 		if(i - num_elements_show <= 0): # Esta al inici
 			snippet = "..." + " ".join(list_text[:i + num_elements_show]) + "..."
